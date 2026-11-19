@@ -162,6 +162,29 @@ interface MiraContextType {
 
 const MiraContext = createContext<MiraContextType | undefined>(undefined);
 
+const getInitialNavTab = (): string => {
+  if (typeof window === 'undefined') return 'Home';
+  try {
+    const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    const queryTab = (params.get('tab') || params.get('page') || '').toLowerCase();
+    const target = queryTab || hash;
+    if (target === 'admin') return 'Admin';
+    if (target === 'account' || target === 'login') return 'Account';
+    if (target === 'chat') return 'Chat';
+    if (target === 'vision') return 'Vision';
+    if (target === 'documents') return 'Documents';
+    if (target === 'actions') return 'Actions';
+    if (target === 'myday' || target === 'day') return 'MyDay';
+    if (target === 'studio') return 'Studio';
+    if (target === 'settings') return 'Settings';
+    if (target === 'home') return 'Home';
+  } catch (e) {
+    // ignore
+  }
+  return 'Home';
+};
+
 export const MiraProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Theme & Studio Personalization
   const [theme, setThemeState] = useState<MiraThemeId>(getSavedTheme);
@@ -169,7 +192,29 @@ export const MiraProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [worldSettings, setWorldSettingsState] = useState<MiraWorldSettings>(() => getSavedWorldSettings(getSavedTheme()));
   const [isStudioOpen, setIsStudioOpen] = useState<boolean>(false);
   const [devMode, setDevMode] = useState<boolean>(false);
-  const [activeNavTab, setActiveNavTab] = useState<string>('Home');
+  const [activeNavTab, setActiveNavTabState] = useState<string>(getInitialNavTab);
+
+  const setActiveNavTab = (tab: string) => {
+    setActiveNavTabState(tab);
+    if (typeof window !== 'undefined') {
+      try {
+        const hashTarget = tab.toLowerCase();
+        window.history.replaceState(null, '', `#${hashTarget}`);
+      } catch (e) {
+        // ignore
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleHash = () => {
+      const tab = getInitialNavTab();
+      setActiveNavTabState(tab);
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   // User Authentication
   const [user, setUser] = useState<UserProfile | null>(getSavedUserProfile);
