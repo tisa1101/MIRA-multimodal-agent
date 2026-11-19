@@ -17,6 +17,19 @@ from backend.models import (
     DocumentUploadResponse,
     ActionExecuteRequest,
     ActionExecuteResponse,
+    GoogleAuthRequest,
+    PaymentOrderRequest,
+    PaymentVerifyRequest,
+    AdminToggleEliteRequest,
+)
+from backend.services.user_service import (
+    get_or_create_google_user,
+    get_all_users,
+    toggle_user_elite_status,
+    create_razorpay_order,
+    verify_and_activate_elite,
+    get_platform_metrics,
+    load_transactions,
 )
 from backend.services.gemini_service import generate_response, analyze_image
 from backend.services.document_service import (
@@ -730,7 +743,104 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         pass
 
 
+
+# -------------------------------------------------------------------------
+# Google / Gmail Direct Authentication API
+# -------------------------------------------------------------------------
+
+@app.post("/api/auth/google")
+def google_auth_endpoint(request: GoogleAuthRequest):
+    """Authenticate or register a user directly with Google/Gmail profile."""
+    user = get_or_create_google_user(
+        email=request.email,
+        name=request.name,
+        picture=request.picture,
+        google_id=request.google_id,
+    )
+    return {
+        "status": "success",
+        "message": f"Welcome to MIRA, {user.get('name')}!",
+        "user": user,
+    }
+
+
+# -------------------------------------------------------------------------
+# Payment Gateway & Elite Membership Subscription (₹1 / Month)
+# -------------------------------------------------------------------------
+
+@app.post("/api/payment/create-order")
+def create_payment_order_endpoint(request: PaymentOrderRequest):
+    """Create a ₹1 / month Elite subscription order for Razorpay checkout."""
+    order = create_razorpay_order(
+        user_id=request.user_id,
+        email=request.email,
+        amount_inr=request.amount_inr,
+    )
+    return order
+
+
+@app.post("/api/payment/verify")
+def verify_payment_endpoint(request: PaymentVerifyRequest):
+    """Verify Razorpay payment and activate Elite Membership."""
+    try:
+        result = verify_and_activate_elite(
+            order_id=request.order_id,
+            payment_id=request.payment_id,
+            user_id=request.user_id,
+            signature=request.signature,
+            amount_inr=request.amount_inr,
+        )
+        return result
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(err),
+        )
+
+
+# -------------------------------------------------------------------------
+# Enterprise Admin Dashboard & Business Intelligence APIs
+# -------------------------------------------------------------------------
+
+@app.get("/api/admin/stats")
+def admin_stats_endpoint():
+    """Retrieve platform KPIs: total users, active users, elite subscribers, revenue in INR."""
+    metrics = get_platform_metrics()
+    return metrics
+
+
+@app.get("/api/admin/users")
+def admin_users_endpoint(search: Optional[str] = None, role: Optional[str] = None):
+    """Retrieve directory of registered users with search and filter capabilities."""
+    users = get_all_users(search=search, role=role)
+    return {"users": users, "count": len(users)}
+
+
+@app.post("/api/admin/users/toggle-elite")
+def admin_toggle_elite_endpoint(request: AdminToggleEliteRequest):
+    """Admin action to manually toggle Elite membership for any user."""
+    updated = toggle_user_elite_status(request.user_id)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID '{request.user_id}' not found.",
+        )
+    return {
+        "status": "success",
+        "message": f"Updated Elite status for {updated.get('name')} to {updated.get('is_elite')}.",
+        "user": updated,
+    }
+
+
+@app.get("/api/admin/transactions")
+def admin_transactions_endpoint():
+    """Retrieve payment gateway audit trail and transaction logs."""
+    txs = load_transactions()
+    return {"transactions": txs, "count": len(txs)}
+
+
 # Mount compiled frontend static assets and provide client-side SPA fallback
+
 dist_dir = Path(__file__).resolve().parent.parent / "dist"
 if dist_dir.exists():
     from fastapi.staticfiles import StaticFiles

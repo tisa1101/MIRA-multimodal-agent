@@ -164,3 +164,41 @@ class ActionExecuteResponse(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
         description="ISO 8601 UTC timestamp",
     )
+
+
+# -------------------------------------------------------------------------
+# Google Auth, Payment & Admin Models
+# -------------------------------------------------------------------------
+
+class GoogleAuthRequest(BaseModel):
+    """Request payload for Google/Gmail sign-in and account creation."""
+
+    email: str = Field(..., description="User Google email address")
+    name: str = Field(..., description="User full display name from Google")
+    picture: Optional[str] = Field(default=None, description="Google profile picture avatar URL")
+    google_id: Optional[str] = Field(default=None, description="Unique Google account ID")
+    id_token: Optional[str] = Field(default=None, description="Optional Google OAuth JWT credential")
+
+
+class PaymentOrderRequest(BaseModel):
+    """Request payload to initiate a ₹1 / month Elite subscription order."""
+
+    user_id: str = Field(..., description="ID or email of the subscribing customer")
+    email: str = Field(..., description="Customer billing email")
+    amount_inr: float = Field(default=1.0, description="Plan price in INR (Default: ₹1.00)")
+
+
+class PaymentVerifyRequest(BaseModel):
+    """Request payload to verify Razorpay payment and activate Elite status."""
+
+    order_id: str = Field(..., description="Razorpay order ID")
+    payment_id: str = Field(..., description="Razorpay payment ID")
+    user_id: str = Field(..., description="Customer user ID or email")
+    signature: Optional[str] = Field(default=None, description="Razorpay HMAC SHA256 signature")
+    amount_inr: float = Field(default=1.0, description="Amount in INR")
+
+
+class AdminToggleEliteRequest(BaseModel):
+    """Admin action to manually toggle Elite membership for a user."""
+
+    user_id: str = Field(..., description="ID of the user to toggle")

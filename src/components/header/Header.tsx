@@ -14,6 +14,7 @@ import {
   Code2,
   Check,
   AlertCircle,
+  Crown,
 } from 'lucide-react';
 
 const LOOP_STAGES: Array<{ id: LoopStage; label: string; icon: LucideIcon }> = [
@@ -35,6 +36,7 @@ export const Header: React.FC = () => {
     setDevMode,
     metrics,
     user,
+    setIsEliteModalOpen,
   } = useMira();
 
   // Derive dynamic pipeline status for each stage based on live agent state
@@ -143,6 +145,28 @@ export const Header: React.FC = () => {
             <Activity size={12} className="text-amber-500" />
             <span>{metrics.fps} FPS • {metrics.sttLatencyMs}ms</span>
           </div>
+        )}
+
+        {/* Elite Membership Badge or ₹1 Upgrade Trigger */}
+        {user?.isElite || user?.role === 'elite' ? (
+          <div
+            className="topbar-elite-badge"
+            title="MIRA Elite Member (Active - ₹1/mo)"
+            onClick={() => setIsEliteModalOpen(true)}
+            style={{ cursor: 'pointer' }}
+          >
+            <Crown size={14} className="text-amber-500" />
+            <span>Elite Active</span>
+          </div>
+        ) : (
+          <button
+            className="topbar-upgrade-elite-btn"
+            onClick={() => setIsEliteModalOpen(true)}
+            title="Upgrade to MIRA Elite for ₹1 / month"
+          >
+            <Crown size={13} />
+            <span>Upgrade ₹1</span>
+          </button>
         )}
 
         {/* MIRA Studio Button */}

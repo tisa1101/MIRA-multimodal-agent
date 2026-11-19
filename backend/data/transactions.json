@@ -1,0 +1,80 @@
+[
+  {
+    "id": "tx_7cfd70b61b",
+    "order_id": "order_d4c37c8e825c4d",
+    "payment_id": "pay_test_verified_12345",
+    "user_id": "usr-g-93741c52",
+    "user_name": "Judge Jane",
+    "user_email": "test.judge@hackathon.org",
+    "amount": 1.0,
+    "currency": "INR",
+    "status": "captured",
+    "plan": "MIRA Elite Monthly (\u20b91)",
+    "created_at": "2026-11-19T19:14:45.342862+00:00"
+  },
+  {
+    "id": "tx_8eca449b88",
+    "order_id": "order_4255f5086b0f4b",
+    "payment_id": "pay_test_verified_12345",
+    "user_id": "usr-g-93741c52",
+    "user_name": "Judge Jane",
+    "user_email": "test.judge@hackathon.org",
+    "amount": 1.0,
+    "currency": "INR",
+    "status": "captured",
+    "plan": "MIRA Elite Monthly (\u20b91)",
+    "created_at": "2026-11-19T18:51:12.577790+00:00"
+  },
+  {
+    "id": "tx_31daddafa5",
+    "order_id": "order_5c3028fb4ada4f",
+    "payment_id": "pay_test_verified_12345",
+    "user_id": "usr-g-93741c52",
+    "user_name": "Judge Jane",
+    "user_email": "test.judge@hackathon.org",
+    "amount": 1.0,
+    "currency": "INR",
+    "status": "captured",
+    "plan": "MIRA Elite Monthly (\u20b91)",
+    "created_at": "2026-11-19T18:46:15.192903+00:00"
+  },
+  {
+    "id": "tx_seed_001",
+    "order_id": "order_founder_001",
+    "payment_id": "pay_founder_001",
+    "user_id": "usr-khushi-founder",
+    "user_name": "Khushi",
+    "user_email": "khushi@miralabs.ai",
+    "amount": 1.0,
+    "currency": "INR",
+    "status": "captured",
+    "plan": "MIRA Elite Monthly (\u20b91)",
+    "created_at": "2026-09-15T10:05:00Z"
+  },
+  {
+    "id": "tx_seed_002",
+    "order_id": "order_tisa_elite_99",
+    "payment_id": "pay_tisa_elite_99",
+    "user_id": "usr-tisa-architect",
+    "user_name": "Tisa",
+    "user_email": "tisa@neurallabs.io",
+    "amount": 1.0,
+    "currency": "INR",
+    "status": "captured",
+    "plan": "MIRA Elite Monthly (\u20b91)",
+    "created_at": "2026-10-01T12:05:00Z"
+  },
+  {
+    "id": "tx_seed_003",
+    "order_id": "order_priya_12",
+    "payment_id": "pay_priya_elite_12",
+    "user_id": "usr-priya-developer",
+    "user_name": "Priya Sharma",
+    "user_email": "priya.sharma@techcorp.in",
+    "amount": 1.0,
+    "currency": "INR",
+    "status": "captured",
+    "plan": "MIRA Elite Monthly (\u20b91)",
+    "created_at": "2026-10-25T11:25:00Z"
+  }
+]

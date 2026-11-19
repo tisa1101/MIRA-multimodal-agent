@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  ShieldAlert,
+  Crown,
 } from 'lucide-react';
 
 interface NavItem {
@@ -33,6 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'Actions', label: 'Actions', icon: Zap },
   { id: 'Studio', label: 'MIRA Studio', icon: Sparkles, badge: '5 Themes' },
   { id: 'Account', label: 'Account & Login', icon: User, badge: 'Accounts' },
+  { id: 'Admin', label: 'Admin Portal', icon: ShieldAlert, badge: 'Growth' },
   { id: 'Settings', label: 'Settings', icon: Settings },
 ];
 
@@ -47,6 +50,7 @@ export const Sidebar: React.FC = () => {
     devMode,
     setDevMode,
     user,
+    setIsEliteModalOpen,
   } = useMira();
 
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
@@ -129,6 +133,61 @@ export const Sidebar: React.FC = () => {
             </button>
           );
         })}
+
+        {/* Elite Membership Quick Prompt */}
+        {!isCollapsed ? (
+          <div
+            className="sidebar-elite-box"
+            style={{
+              margin: '8px 6px',
+              padding: '10px 12px',
+              borderRadius: 12,
+              background: user?.isElite || user?.role === 'elite'
+                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(236, 72, 153, 0.1))'
+                : 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(236, 72, 153, 0.12))',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              cursor: 'pointer',
+            }}
+            onClick={() => setIsEliteModalOpen(true)}
+            title="MIRA Elite Membership (₹1 / month)"
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Crown size={15} style={{ color: '#f59e0b' }} />
+                <span style={{ fontSize: '12px', fontWeight: 800, color: '#d97706' }}>
+                  {user?.isElite || user?.role === 'elite' ? 'Elite Member' : 'Get Elite'}
+                </span>
+              </div>
+              <span
+                style={{
+                  fontSize: '10.5px',
+                  fontWeight: 800,
+                  background: '#f59e0b',
+                  color: '#ffffff',
+                  padding: '2px 6px',
+                  borderRadius: 999,
+                }}
+              >
+                {user?.isElite || user?.role === 'elite' ? 'Active' : '₹1/mo'}
+              </span>
+            </div>
+            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.3 }}>
+              {user?.isElite || user?.role === 'elite'
+                ? 'VIP perks & priority AI active'
+                : 'Unlock priority Gemini 2.0 & VIP crown'}
+            </div>
+          </div>
+        ) : (
+          <button
+            className="sidebar-nav-item"
+            style={{ color: '#f59e0b' }}
+            onClick={() => setIsEliteModalOpen(true)}
+            title="MIRA Elite (₹1/month)"
+          >
+            <Crown size={20} />
+            <span className="sidebar-tooltip">Elite: ₹1/mo</span>
+          </button>
+        )}
 
         {/* Developer Mode Toggle */}
         {!isCollapsed ? (

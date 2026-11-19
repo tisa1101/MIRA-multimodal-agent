@@ -13,6 +13,8 @@ import { ActionsPage } from './pages/ActionsPage';
 import { StudioPage } from './pages/StudioPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
+import { AdminPage } from './pages/AdminPage';
+import { EliteUpgradeModal } from './components/subscription/EliteUpgradeModal';
 import { DocumentPreviewModal } from './components/documents/DocumentPreviewModal';
 import { MiraStudioModal } from './components/studio/MiraStudioModal';
 import { CursorTrailEffect } from './components/effects/CursorTrailEffect';
@@ -43,6 +45,8 @@ export const App: React.FC = () => {
       case 'Account':
       case 'Login':
         return <LoginPage />;
+      case 'Admin':
+        return <AdminPage />;
       default:
         return <HomePage />;
     }
@@ -74,6 +78,7 @@ export const App: React.FC = () => {
       {/* Global Modals, Splash & Interactive FX */}
       <MiraLoadingSplash />
       <AuthModal />
+      <EliteUpgradeModal />
       <DocumentPreviewModal />
       <MiraStudioModal />
       <CursorTrailEffect />

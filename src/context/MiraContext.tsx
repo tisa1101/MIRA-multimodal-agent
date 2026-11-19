@@ -1,3 +1,4 @@
+import { apiClient } from "../services/apiClient";
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   AgentState,
@@ -151,6 +152,12 @@ interface MiraContextType {
   login: (profile: import('../types/auth').UserProfile) => void;
   logout: () => void;
   loginAsGuest: () => void;
+
+  // Elite Membership (₹1/month) & Google Auth
+  isEliteModalOpen: boolean;
+  setIsEliteModalOpen: (open: boolean) => void;
+  loginWithGoogle: (googleProfile: { email: string; name: string; picture?: string; googleId?: string }) => Promise<void>;
+  upgradeToElite: (paymentData: { orderId: string; paymentId: string; signature?: string; amountInr?: number }) => Promise<void>;
 }
 
 const MiraContext = createContext<MiraContextType | undefined>(undefined);
@@ -199,6 +206,84 @@ export const MiraProvider: React.FC<{ children: React.ReactNode }> = ({ children
       joinedAt: 'Today',
     };
     login(guestUser);
+  };
+
+  // Elite Membership Modal state
+  const [isEliteModalOpen, setIsEliteModalOpen] = useState<boolean>(false);
+
+  // Google Direct Sign-In
+  const loginWithGoogle = async (googleProfile: { email: string; name: string; picture?: string; googleId?: string }) => {
+    try {
+      const res = await apiClient.googleAuth({
+        email: googleProfile.email,
+        name: googleProfile.name,
+        picture: googleProfile.picture,
+        google_id: googleProfile.googleId,
+      });
+      if (res && res.user) {
+        login(res.user);
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend googleAuth failed, falling back to local session:', err);
+    }
+    const profile: UserProfile = {
+      id: `g-${Date.now().toString(36)}`,
+      name: googleProfile.name || googleProfile.email.split('@')[0],
+      email: googleProfile.email,
+      picture: googleProfile.picture,
+      avatar: '🌸',
+      role: 'member',
+      authProvider: 'google',
+      googleId: googleProfile.googleId,
+      joinedAt: new Date().toISOString(),
+    };
+    login(profile);
+  };
+
+  // Upgrade to Elite via Razorpay verification
+  const upgradeToElite = async (paymentData: { orderId: string; paymentId: string; signature?: string; amountInr?: number }) => {
+    const currentUserId = user?.id || 'user-default';
+    try {
+      const res = await apiClient.verifyPayment({
+        order_id: paymentData.orderId,
+        payment_id: paymentData.paymentId,
+        user_id: currentUserId,
+        signature: paymentData.signature,
+        amount_inr: paymentData.amountInr || 1.0,
+      });
+      if (res && res.subscription) {
+        const updatedUser: UserProfile = {
+          ...(user || { id: currentUserId, name: 'Explorer', email: 'user@mira.ai', avatar: '👑', joinedAt: new Date().toISOString() }),
+          role: 'elite',
+          isElite: true,
+          eliteSubscription: res.subscription as any,
+        };
+        login(updatedUser);
+        soundEffects.play('sparkle');
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend verifyPayment failed, activating offline Elite state:', err);
+    }
+    if (user) {
+      const updatedUser: UserProfile = {
+        ...user,
+        role: 'elite',
+        isElite: true,
+        eliteSubscription: {
+          status: 'active',
+          amount: 1.0,
+          currency: 'INR',
+          subscribedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          paymentId: paymentData.paymentId,
+          orderId: paymentData.orderId,
+        },
+      };
+      login(updatedUser);
+      soundEffects.play('sparkle');
+    }
   };
 
   // Agent state initialized to 'idle' with friendly companion readiness
@@ -727,6 +812,10 @@ export const MiraProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         loginAsGuest,
+        isEliteModalOpen,
+        setIsEliteModalOpen,
+        loginWithGoogle,
+        upgradeToElite,
       }}
     >
       {children}

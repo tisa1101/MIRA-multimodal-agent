@@ -1,3 +1,4 @@
+import type { UserProfile, PlatformMetrics, PaymentTransaction } from "../types/auth";
 /**
  * MIRA Frontend REST API Client
  * Connects to Phase 2 FastAPI backend (default: http://127.0.0.1:8000)
@@ -324,6 +325,164 @@ export class MiraApiClient {
     }
     return res.json();
   }
-}
+  /**
+   * Authenticate or register via Google Identity Services
+   */
+  public async googleAuth(payload: {
+    email: string;
+    name: string;
+    picture?: string;
+    google_id?: string;
+    id_token?: string;
+  }): Promise<{
+    status: string;
+    user: UserProfile;
+    session_id: string;
+    is_new: boolean;
+  }> {
+    const res = await fetch(`${this.baseUrl}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      throw new Error(`Google authentication failed [${res.status}]: ${errText}`);
+    }
+    return res.json();
+  }
 
+  /**
+   * Create Razorpay / payment order for Elite Membership (₹1/mo)
+   */
+  public async createPaymentOrder(payload: {
+    user_id: string;
+    email: string;
+    plan_name?: string;
+    amount_inr?: number;
+  }): Promise<{
+    status: string;
+    order_id: string;
+    amount: number;
+    currency: string;
+    key_id: string;
+    notes?: Record<string, string>;
+  }> {
+    const res = await fetch(`${this.baseUrl}/api/payment/create-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      throw new Error(`Create payment order failed [${res.status}]: ${errText}`);
+    }
+    return res.json();
+  }
+
+  /**
+   * Verify Razorpay payment and activate Elite status
+   */
+  public async verifyPayment(payload: {
+    order_id: string;
+    payment_id: string;
+    user_id: string;
+    signature?: string;
+    amount_inr?: number;
+  }): Promise<{
+    status: string;
+    subscription: Record<string, unknown>;
+    transaction: PaymentTransaction;
+    message: string;
+  }> {
+    const res = await fetch(`${this.baseUrl}/api/payment/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      throw new Error(`Payment verification failed [${res.status}]: ${errText}`);
+    }
+    return res.json();
+  }
+
+  /**
+   * Get Platform Overview Metrics & KPI stats for Admin Dashboard
+   */
+  public async getAdminStats(): Promise<{
+    status: string;
+    metrics: PlatformMetrics;
+    system: Record<string, unknown>;
+  }> {
+    const res = await fetch(`${this.baseUrl}/api/admin/stats`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      throw new Error(`Fetch admin stats failed [${res.status}]: ${errText}`);
+    }
+    return res.json();
+  }
+
+  /**
+   * Fetch all registered users for Admin Control Center
+   */
+  public async getAdminUsers(): Promise<{
+    status: string;
+    total: number;
+    users: UserProfile[];
+  }> {
+    const res = await fetch(`${this.baseUrl}/api/admin/users`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      throw new Error(`Fetch admin users failed [${res.status}]: ${errText}`);
+    }
+    return res.json();
+  }
+
+  /**
+   * Toggle a user's Elite membership tier
+   */
+  public async toggleUserElite(userId: string, isElite?: boolean): Promise<{
+    status: string;
+    user: UserProfile;
+    is_elite: boolean;
+    message: string;
+  }> {
+    const res = await fetch(`${this.baseUrl}/api/admin/users/toggle-elite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, is_elite: isElite }),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      throw new Error(`Toggle elite status failed [${res.status}]: ${errText}`);
+    }
+    return res.json();
+  }
+
+  /**
+   * Fetch all payment audit records / transactions
+   */
+  public async getAdminTransactions(): Promise<{
+    status: string;
+    total: number;
+    transactions: PaymentTransaction[];
+  }> {
+    const res = await fetch(`${this.baseUrl}/api/admin/transactions`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      throw new Error(`Fetch admin transactions failed [${res.status}]: ${errText}`);
+    }
+    return res.json();
+  }
+}
 export const apiClient = new MiraApiClient();
